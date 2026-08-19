@@ -65,13 +65,13 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg
 .bg-item{display:flex; gap:8px; align-items:flex-start; padding:7px 4px; border-bottom:1px dashed var(--line);}
 .bg-item:last-child{border-bottom:none;}
 .ck{flex:0 0 auto; font-size:17px; cursor:pointer; color:var(--red); user-select:none; line-height:1.3; width:20px; text-align:center;}
-.bg-item .bg-name{font-size:13.5px; font-weight:700; color:var(--red); white-space:nowrap; padding-top:1px;}
+.bg-item .bg-name{font-size:13.5px; font-weight:700; color:var(--red); white-space:nowrap; padding-top:1px; flex:0 0 58px;}
 .bg-item .bg-desc{font-size:12.5px; line-height:1.65; color:var(--ink);}
 
 /* 模板行动 */
 .act-item{display:flex; gap:8px; align-items:flex-start; padding:7px 4px; border-bottom:1px dashed var(--line);}
 .act-item:last-child{border-bottom:none;}
-.act-item .act-name{font-size:13px; font-weight:700; color:var(--red2); white-space:nowrap; padding-top:1px;}
+.act-item .act-name{font-size:13px; font-weight:700; color:var(--red2); white-space:nowrap; padding-top:1px; flex:0 0 70px;}
 .act-item .act-desc{font-size:12.5px; line-height:1.65; color:var(--ink); white-space:pre-wrap;}
 
 /* 五行（元素名 | 数值 | 圆球 | 简介，简介列自适应宽度避免右侧留白） */
@@ -154,6 +154,11 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg
 .growth-dots .dot{font-size:14px;}
 .growth-item .gtxt{font-size:12.5px; line-height:1.5; color:var(--ink);}
 
+/* 人物背景（全宽，自动延伸） */
+.bg-block{margin-top:14px;}
+.bg-text{width:100%; border:none; resize:none; overflow:hidden; min-height:120px; padding:10px 12px; font-size:13px; line-height:1.65; color:var(--ink); background:#fff; font-family:inherit;}
+.bg-text:focus{outline:none; background:#FFF7F4;}
+
 .foot-note{margin-top:12px; font-size:11px; color:var(--gray); text-align:right;}
 
 @media (max-width:900px){
@@ -175,8 +180,9 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg
   <div class="toolbar">
     <div class="brand">武林之心角色卡<small>标准人物模板</small></div>
     <div class="btns">
-      <button class="btn solid" onclick="window.print()">打印 / 存 PDF</button>
       <button class="btn" id="btnJpg" onclick="exportJpg()">生成 JPG</button>
+      <button class="btn" onclick="exportJson()">导出 JSON</button>
+      <button class="btn" onclick="importJson()">导入 JSON</button>
       <button class="btn" onclick="resetCard()">重置当前角色</button>
     </div>
   </div>
@@ -357,25 +363,35 @@ function defState(){
     xpTrig:new Array(5).fill(0),
     growth:new Array(4).fill(0),
     customAct:"",
+    background:"",
     fate:[{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""}]
   };
 }
 function save(){
   try{ localStorage.setItem(KEY+cur, JSON.stringify(S[cur])); }catch(e){}
 }
+function saveTo(id){
+  try{ localStorage.setItem(KEY+id, JSON.stringify(S[id])); }catch(e){}
+}
+function normalize(d){
+  const st = defState();
+  Object.assign(st, d || {});
+  st.focus = [!!st.focus[0], !!st.focus[1]];
+  st.ent = [st.ent ? (st.ent[0]||"") : "", st.ent ? (st.ent[1]||"") : ""];
+  st.customAct = st.customAct || "";
+  st.background = st.background || "";
+  st.xpTrig = [0,1,2,3,4].map(k=>{ const v=st.xpTrig[k]; return (typeof v==="number")?v:(v?1:0); });
+  let bgFound = false;
+  st.bg = st.bg.map(v=>{ if(v&&!bgFound){ bgFound=true; return true; } return false; });
+  if(!Array.isArray(st.fate) || st.fate.length===0) st.fate = [{name:"",val:""}];
+  if(typeof st.inputs !== "object" || st.inputs===null) st.inputs = {};
+  return st;
+}
 function load(id){
   try{
     const raw = localStorage.getItem(KEY+id);
     if(!raw) return defState();
-    const d = JSON.parse(raw), st = defState();
-    Object.assign(st, d);
-    st.focus = [!!d.focus[0], !!d.focus[1]];
-    st.ent = [d.ent ? d.ent[0] || "" : "", d.ent ? d.ent[1] || "" : ""];
-    st.customAct = d.customAct || "";
-    st.xpTrig = [0,1,2,3,4].map(k=>{ const v=d.xpTrig[k]; return (typeof v==="number")?v:(v?1:0); });
-    let bgFound = false;
-    st.bg = st.bg.map(v=>{ if(v&&!bgFound){ bgFound=true; return true; } return false; });
-    return st;
+    return normalize(JSON.parse(raw));
   }catch(e){ return defState(); }
 }
 
@@ -494,7 +510,15 @@ function renderCard(){
       growthHtml+
     '</div>'+
   '</div>'+
+  '<div class="block bg-block">'+
+    '<div class="block-title">人物背景</div>'+
+    '<div class="block-body"><textarea class="bg-text" data-bg placeholder="在此填写人物背景…">'+esc(st.background||"")+'</textarea></div>'+
+  '</div>'+
   '<div class="foot-note">数据自动保存在本机浏览器 · 打印时自动隐藏切换栏</div>';
+  document.querySelectorAll(".bg-text").forEach(el=>{
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  });
 }
 
 /* ================= 事件 ================= */
@@ -593,6 +617,11 @@ document.addEventListener("input", function(e){
     if(v>99) v=99;
     S[cur].xpTrig[i] = v; save();
   }
+  if(t.classList && t.classList.contains("bg-text")){
+    S[cur].background = t.value; save();
+    t.style.height = "auto";
+    t.style.height = t.scrollHeight + "px";
+  }
 });
 document.addEventListener("change", function(e){
   const t = e.target;
@@ -613,9 +642,10 @@ function resetCard(){
 function exportJpg(){
   const btn = document.getElementById("btnJpg");
   const name = CARDS.find(x=>x.id===cur).name;
+  const charName = ((S[cur].inputs||{}).name||"").trim() || "未命名";
   const done = (dataUrl)=>{
     const a = document.createElement("a");
-    a.download = name + " 人物卡.jpg";
+    a.download = charName + "-" + name + "-人物卡.jpg";
     a.href = dataUrl;
     document.body.appendChild(a); a.click(); a.remove();
     btn.textContent = "生成 JPG";
@@ -659,6 +689,67 @@ function jpgFallback(done){
     img.onerror = ()=>{ alert("生成 JPG 失败（离线且浏览器不支持导出）"); };
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }catch(e){ alert("生成 JPG 失败：" + e.message); }
+}
+
+/* ================= 导入 / 导出 JSON ================= */
+function exportJson(){
+  const card = CARDS.find(x=>x.id===cur);
+  const charName = ((S[cur].inputs||{}).name||"").trim() || "未命名";
+  const data = {
+    app: "武林之心角色卡",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    id: cur,
+    name: card.name,
+    state: S[cur]
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.download = charName + "-" + card.name + "-角色数据.json";
+  a.href = URL.createObjectURL(blob);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+function importJson(){
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json,application/json";
+  inp.onchange = ()=>{
+    const f = inp.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{ applyImport(JSON.parse(reader.result)); }
+      catch(e){ alert("导入失败：文件不是有效的 JSON"); }
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+function applyImport(data){
+  if(!data || typeof data !== "object"){ alert("导入失败：无法识别的数据格式"); return; }
+  let count = 0;
+  // 格式1：单角色 {id, state}
+  if(data.state){
+    const id = (data.id && CARDS.some(c=>c.id===data.id)) ? data.id
+      : (data.name && CARDS.some(c=>c.name===data.name)) ? CARDS.find(c=>c.name===data.name).id
+      : cur;
+    S[id] = normalize(data.state);
+    saveTo(id); count = 1; cur = id;
+  }else{
+    // 格式2：全量 {id: state}
+    let all = true, any = false;
+    Object.keys(data).forEach(k=>{
+      if(!CARDS.some(c=>c.id===k)) all = false;
+      else any = true;
+    });
+    if(all && any){
+      Object.keys(data).forEach(k=>{ S[k] = normalize(data[k]); saveTo(k); count++; });
+    }
+  }
+  if(count === 0){ alert("导入失败：文件中没有可识别的角色数据"); return; }
+  renderTabs(); renderCard();
+  alert("导入成功：" + count + " 个角色");
 }
 
 /* ================= 启动 ================= */
