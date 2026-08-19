@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>武林之心角色卡 · 标准人物模板</title>
+<style>
+:root{
+  --red:#9E0000; --red2:#A03030; --red3:#B03040; --red4:#C00000;
+  --ink:#2A2A2A; --line:#D9B8B8; --bg:#FFF9F7; --card:#FFFFFF;
+  --gray:#6B6B6B; --darkred:#7A0000;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg); color:var(--ink); padding:16px 12px 40px;}
+.wrap{max-width:1060px; margin:0 auto;}
+
+/* ===== 顶部工具栏 ===== */
+.toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+.brand{font-size:20px; font-weight:700; color:var(--red); letter-spacing:2px;}
+.brand small{font-size:12px; color:var(--red2); font-weight:400; letter-spacing:0; margin-left:6px;}
+.toolbar .btns{margin-left:auto; display:flex; gap:8px;}
+.btn{border:1.5px solid var(--red); background:#fff; color:var(--red); padding:6px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;}
+.btn:hover{background:#FBE9E9;}
+.btn.solid{background:var(--red); color:#fff;}
+.btn.solid:hover{background:var(--darkred);}
+
+/* ===== 角色 Tab ===== */
+.tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;}
+.tab{padding:8px 18px; border-radius:8px 8px 0 0; border:1.5px solid var(--red2); border-bottom:none;
+  background:#fff; color:var(--red2); font-size:15px; font-weight:700; cursor:pointer; letter-spacing:2px;}
+.tab:hover{background:#FBE9E9;}
+.tab.on{background:var(--red); color:#fff;}
+
+/* ===== 角色卡 ===== */
+.card{background:var(--card); border:2px solid var(--red); border-radius:4px; padding:20px 22px; box-shadow:0 2px 10px rgba(158,0,0,.08);}
+
+/* 卡头 */
+.card-head{display:flex; gap:18px; align-items:stretch; border-bottom:2px solid var(--red); padding-bottom:14px; margin-bottom:14px;}
+.badge{flex:0 0 92px; background:var(--red); color:#fff; font-size:38px; font-weight:700; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; letter-spacing:2px; line-height:1.05; padding:8px 0;}
+.head-txt{flex:1;}
+.head-txt .intro{font-size:13px; line-height:1.7; color:var(--ink);}
+.head-txt .rules{margin-top:6px; font-size:12.5px; line-height:1.6; color:var(--red3);}
+.head-txt .rules b{color:var(--red);}
+
+/* 基本信息 */
+/* 基本信息：左竖排字段 + 右头像框 */
+.info-area{display:grid; grid-template-columns:1fr 200px; gap:16px; margin-bottom:14px; align-items:stretch;}
+.info-grid{display:flex; flex-direction:column; gap:9px; min-width:0; justify-content:space-between;}
+.info-grid .fld{display:flex; align-items:center; gap:10px;}
+.info-grid .fld label{flex:0 0 88px; font-size:13px; font-weight:700; color:var(--red2); letter-spacing:1px;}
+.info-grid .fld input{flex:1; min-width:0; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--ink); background:#fff;}
+.info-grid .fld input:focus{outline:none; border-color:var(--red);}
+.info-grid .fld select{flex:1; min-width:0; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--red); background:#fff; font-weight:600;}
+.info-grid .fld select:focus{outline:none; border-color:var(--red);}
+.avatar-box{border:1.5px dashed var(--red2); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px; background:#FFF9F7; cursor:pointer; overflow:hidden; position:relative;}
+.avatar-box img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
+.avatar-hint{font-size:12px; color:var(--red2); text-align:center; line-height:1.8; padding:10px; pointer-events:none;}
+.avatar-remove{position:absolute; top:4px; right:4px; width:22px; height:22px; border:none; border-radius:50%; background:rgba(158,0,0,.85); color:#fff; font-size:14px; line-height:1; cursor:pointer; padding:0; z-index:2;}
+
+/* 头像裁切弹窗 */
+.crop-mask{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:999; display:flex; align-items:center; justify-content:center;}
+.crop-box{background:#fff; border-radius:10px; padding:16px 20px; display:flex; flex-direction:column; align-items:center; gap:12px;}
+.crop-stage{width:200px; height:210px; border:2px solid var(--red); border-radius:6px; overflow:hidden; position:relative; background:#EEE; cursor:move; touch-action:none;}
+.crop-stage img{position:absolute; left:0; top:0; max-width:none; pointer-events:none; user-select:none; -webkit-user-drag:none;}
+.crop-zoom{width:220px;}
+.crop-btns{display:flex; gap:12px;}
+.crop-btns button{padding:7px 22px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;}
+.crop-ok{background:var(--red); color:#fff; border:none;}
+.crop-ok:hover{background:var(--darkred);}
+.crop-cancel{background:#fff; color:var(--red2); border:1.5px solid var(--red2);}
+
+/* 主区两栏（等高，末块自适应填满，左右底部对齐） */
+.main-grid{display:grid; grid-template-columns:1.02fr 1fr; gap:18px; margin-bottom:14px; align-items:stretch;}
+.col{min-width:0; display:flex; flex-direction:column;}
+.col .block{flex:0 0 auto;}
+.col .block:last-child{flex:1 1 auto; display:flex; flex-direction:column;}
+.col .block:last-child .block-body{flex:1 1 auto; display:flex; flex-direction:column;}
+.block{border:1.5px solid var(--red2); border-radius:6px; margin-bottom:14px; overflow:hidden;}
+.block-title{background:var(--red); color:#fff; font-size:14.5px; font-weight:700; padding:6px 12px; letter-spacing:2px;}
+.block-body{padding:10px 12px;}
+
+/* 背景选项 */
+.bg-item{display:flex; gap:8px; align-items:flex-start; padding:7px 4px; border-bottom:1px dashed var(--line);}
+.bg-item:last-child{border-bottom:none;}
+.ck{flex:0 0 auto; font-size:17px; cursor:pointer; color:var(--red); user-select:none; line-height:1.3; width:20px; text-align:center;}
+.bg-item .bg-name{font-size:13.5px; font-weight:700; color:var(--red); white-space:nowrap; padding-top:1px; flex:0 0 58px;}
+.bg-item .bg-desc{font-size:12.5px; line-height:1.65; color:var(--ink);}
+
+/* 模板行动 */
+.act-item{display:flex; gap:8px; align-items:flex-start; padding:7px 4px; border-bottom:1px dashed var(--line);}
+.act-item:last-child{border-bottom:none;}
+.act-item .act-name{font-size:13px; font-weight:700; color:var(--red2); white-space:nowrap; padding-top:1px; flex:0 0 70px;}
+.act-item .act-desc{font-size:12.5px; line-height:1.65; color:var(--ink); white-space:pre-wrap;}
+
+/* 五行（元素名 | 数值 | 圆球 | 简介，简介列自适应宽度避免右侧留白） */
+.elem-row{display:grid; grid-template-columns:52px 52px 60px auto auto; gap:8px; align-items:center; padding:6px 2px; border-bottom:1px dashed var(--line);}
+.elem-row:last-child{border-bottom:none;}
+.elem-name{font-size:17px; font-weight:700; text-align:center;}
+.elem-name.tu{color:#7F6000;}
+.elem-name.huo{color:#C00000;}
+.elem-name.jin{color:#F4B183;}
+.elem-name.shui{color:#8FAADC;}
+.elem-name.mu{color:#548235;}
+.elem-adj select{width:100%; border:1.5px solid var(--line); border-radius:4px; padding:3px 2px; font-size:12.5px; color:var(--red); font-weight:700; background:#fff;}
+.elem-adj select:focus{outline:none; border-color:var(--red);}
+.elem-dot{font-size:17px; cursor:pointer; color:var(--red); text-align:center; user-select:none; margin-left:20px;}
+.elem-words{font-size:12px; line-height:1.55;}
+.elem-words .pos{color:var(--ink); font-weight:600;}
+.elem-words .neg{color:var(--red3);}
+.style-tag{font-size:11px; color:#fff; background:var(--red); border-radius:3px; padding:2px 7px; white-space:nowrap; letter-spacing:1px;}
+/* 整行标记后灰化（"不能使用"） */
+.elem-row.marked{opacity:0.45; background:#F0F0F0;}
+.elem-row.marked .elem-name,
+.elem-row.marked .elem-words .pos,
+.elem-row.marked .elem-words .neg{color:#888 !important;}
+.elem-row.marked .elem-adj select{background:#E5E5E5 !important; color:#888 !important; border-color:#CCC !important; cursor:not-allowed;}
+.elem-row.marked .elem-dot{cursor:pointer;}
+
+/* 自拟行动（红底白字标题行分隔，融入原框） */
+.act-custom{margin-top:10px; border-top:1.5px solid var(--red2); flex:1 1 auto; display:flex; flex-direction:column;}
+.act-custom-label{display:inline-block; background:var(--red); color:#fff; font-size:12.5px; font-weight:700; padding:4px 14px; letter-spacing:2px; border-radius:0 0 6px 0;}
+.act-custom-text{width:100%; border:none; resize:vertical; min-height:88px; padding:7px 8px; font-size:12.5px; line-height:1.65; color:var(--ink); background:transparent; font-family:inherit; flex:1 1 auto;}
+.act-custom-text:focus{outline:none;}
+
+/* 纠葛 */
+.ent-area{border:1.5px solid var(--line); border-radius:4px; margin-bottom:8px; overflow:hidden; flex:1 1 auto; display:flex; flex-direction:column;}
+.ent-area:last-child{margin-bottom:0;}
+.ent-head{display:flex; align-items:center; gap:10px; background:#FDF3F1; padding:5px 10px; border-bottom:1px solid var(--line);}
+.ent-name{font-size:13.5px; font-weight:700; color:var(--red); letter-spacing:1px;}
+.ent-focus{font-size:11.5px; color:var(--red3);}
+.ent-text{width:100%; border:none; resize:vertical; min-height:64px; padding:8px 10px; font-size:13px; line-height:1.65; color:var(--ink); background:#fff; font-family:inherit; flex:1 1 auto;}
+.ent-text:focus{outline:none; background:#FFF7F4;}
+
+/* 底部三栏 */
+.bottom-grid{display:grid; grid-template-columns:180px 1fr 1.25fr; gap:18px;}
+.mini-title{background:var(--red2); color:#fff; font-size:13.5px; font-weight:700; padding:5px 10px; border-radius:4px; letter-spacing:2px; margin-bottom:8px;}
+.wound-row{display:flex; align-items:center; gap:10px;}
+.wound-row .ck{font-size:20px;}
+.wound-txt{font-size:13px; color:var(--ink);}
+.wound-txt b{color:var(--red); font-size:14px;}
+
+.fate-table{width:100%; border-collapse:collapse;}
+.fate-table td{border:1.5px solid var(--line); padding:2px;}
+.fate-table input{width:100%; border:none; padding:5px 6px; font-size:13px; color:var(--ink); background:transparent;}
+.fate-table input:focus{outline:none; background:#FFF3F0;}
+.fate-table td.del{width:26px; text-align:center;}
+.fate-table .del-btn{background:none; border:none; color:var(--red3); cursor:pointer; font-size:14px; padding:2px 4px;}
+.fate-table .del-btn:hover{color:var(--red);}
+.add-row{display:inline-block; margin-top:6px; border:1px dashed var(--red2); color:var(--red2); background:#fff; border-radius:4px;
+  padding:3px 12px; font-size:12px; cursor:pointer;}
+.add-row:hover{background:#FBE9E9;}
+
+.xp-trig{list-style:none;}
+.xp-trig-item{display:flex; gap:8px; align-items:center; padding:4px 0; font-size:12.5px; line-height:1.55;}
+.xp-trig-txt{flex:1;}
+.counter{display:flex; align-items:center; gap:3px; flex:0 0 auto;}
+.cnt-btn{width:20px; height:20px; border:1.5px solid var(--red2); background:#fff; color:var(--red); border-radius:4px; cursor:pointer; font-size:14px; line-height:1; padding:0;}
+.cnt-btn:hover{background:#FBE9E9;}
+.cnt-input{width:46px; border:1.5px solid var(--line); border-radius:4px; padding:2px 2px; font-size:12.5px; text-align:center; color:var(--red); font-weight:700; background:#fff;}
+.cnt-input:focus{outline:none; border-color:var(--red);}
+.cnt-input::-webkit-outer-spin-button,
+.cnt-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+.cnt-input{-moz-appearance:textfield;}
+.xp-bar{display:flex; align-items:center; gap:8px; margin:8px 0 4px;}
+.xp-label{font-size:13px; font-weight:700; color:var(--red);}
+.xp-dots{display:flex; gap:3px; flex:1;}
+.dot{font-size:16px; cursor:pointer; color:#CBB; user-select:none; transition:color .1s;}
+.dot.on{color:var(--red);}
+.growth-item{display:flex; gap:8px; align-items:flex-start; padding:4px 0; border-bottom:1px dashed var(--line);}
+.growth-item:last-child{border-bottom:none;}
+.growth-dots{white-space:nowrap; padding-top:2px;}
+.growth-dots .dot{font-size:14px;}
+.growth-item .gtxt{font-size:12.5px; line-height:1.5; color:var(--ink);}
+
+/* 人物背景（全宽，自动延伸） */
+.bg-block{margin-top:14px;}
+.bg-text{width:100%; border:none; resize:none; overflow:hidden; min-height:120px; padding:10px 12px; font-size:13px; line-height:1.65; color:var(--ink); background:#fff; font-family:inherit;}
+.bg-text:focus{outline:none; background:#FFF7F4;}
+
+.foot-note{margin-top:12px; font-size:11px; color:var(--gray); text-align:right;}
+
+@media (max-width:900px){
+  .main-grid,.bottom-grid{grid-template-columns:1fr;}
+  .info-area{grid-template-columns:1fr;}
+}
+@media print{
+  body{background:#fff; padding:0;}
+  .toolbar,.tabs,.add-row,.fate-table .del-btn{display:none !important;}
+  .card{border-width:1.5px; box-shadow:none;}
+  @page{size:A4; margin:10mm;}
+  .main-grid,.bottom-grid{page-break-inside:avoid;}
+  .block{page-break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toolbar">
+    <div class="brand">武林之心角色卡<small>标准人物模板</small></div>
+    <div class="btns">
+      <button class="btn" id="btnJpg" onclick="exportJpg()">生成 JPG</button>
+      <button class="btn" onclick="exportJson()">导出 JSON</button>
+      <button class="btn" onclick="importJson()">导入 JSON</button>
+      <button class="btn" onclick="resetCard()">重置当前角色</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* ================= 角色数据（取自 6 张 Excel 标准人物模板） ================= */
+const CARDS = [
+{
+  "id": "yishi",
+  "cn": "义士",
+  "name": "义士",
+  "intro": "选择此模板，如果你：希望扮演一位以公义、责任和儒学美德为准则的人物。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；展现责任与自我之间的冲突。",
+  "backgrounds": [
+    {"name":"孝廉","desc":"你忠于家族，家族也在背后支持你。每场团务，你可以动用一次家族人情：一封介绍信、进入一次私人聚会的许可、为一项大胆计划提供助力，等等。但他们可能会要求你帮忙或对你有其他期望。"},
+    {"name":"官员","desc":"你是一名地方官员、按察使或朝堂官吏，拥有一定权威。你有暗中向你通风报信、提供协助的线人选择一种线人类型：街头乞丐、朝堂门客、某一派系成员等。只要不需要他们付出代价或者陷入险境，他们总是愿意给你提供基本信息和一点小帮助。若是难以获取的信息或需要他们涉险，你必须向他们提供他们想要的回报。"},
+    {"name":"剑客","desc":"武林中人皆习武艺，但鲜有人如你这般倾心竭力。你誓在成为盖世侠客，以此报效家族和宗门。你有一个额外的负伤槽。当你标记第一次“负伤”时，你虽流血受伤，却不承受任何惩罚。你在标记第二次“负伤”时，你承受 -2 持续。"}
+  ],
+  "actions": [
+    {"name":"天外飞仙","desc":"当在【一决高下】中，你对实力弱于你的敌人掷出成功，或对实力相当的敌人掷出 7-9 时，在其他选择之外，你还可以追加一项效果：大幅改变战斗地点。你可以将对手逼入附近区域，例如把他们逼出窗外、与你一同坠下悬崖，或将战斗带到别的地方等。"},
+    {"name":"飞刀有情","desc":"你可以花费与某人的一点缘分，立即出现在此人的所在地。如果你同意，其他人也可以花费一点和你的缘分，让你在关键时刻出现。描述你是如何凑巧地及时抵达。"},
+    {"name":"倚天屠龙","desc":"你拥有一把传奇兵刃，所至之处无人不识。当使用【以寡敌众】或对武林中人使用【技惊四座】时，你获得 +1 加值。"},
+    {"name":"义结金兰","desc":"当你对盟友使用【同舟共济】，并立即花费你刚创造的缘分点时，给对方 +2 而非 +1 加值。"},
+    {"name":"快意恩仇","desc":"当你发现有人对你说谎，或违背对你的承诺时，你获得与他们的 1 个缘分点。除了缘分的通常用途外，你还可以消耗此缘分点，使他们的某个计划或行动出现差错，并描述发生的事情。若你在针对他们的行动掷骰中消耗此缘分点，则获得 +2 修正。"},
+    {"name":"泰山可倚","desc":"当你守卫某人或某事时，掷骰，成功时，你成功护住他们，并从以下选项中选择其一：掌控某事；改变冲突发生的地点；获得与被守护之人的一点缘分。\n当掷骰结果为 7-9 时，你还必须标记一项五行属性（自选），或让 GM 把局势变得更复杂。\n失败时，你的努力反使守护的对象或他人情况更糟。"},
+    {"name":"只手遮天","desc":"当你凭借 NPC 认可的权威给对方下命令时，掷骰。成功时，他们选择其一：服从、让步、发起孱弱的攻击，或不知所措。结果为 10 或以上 时，再指定一个对方无法选择的选项，并在对抗此人时获得 +1 次骰。失败时，选择：标记一项五行属性，或某位重要人物认为你越权行事。"},
+    {"name":"望尘追迹","desc":"当你追索某人，掷骰。成功时，你准确知晓他们的所在，并能够一路追踪直到找到他们。当掷骰结果为 10 或以上时，对方没有察觉你，且你在针对他们时获得 +1 次骰。失败时，在你找到他们之前，一个不受欢迎的人先找到了你。"}
+  ]
+},
+{
+  "id": "xuesheng",
+  "cn": "学生",
+  "name": "学生",
+  "intro": "选择此模板，如果你：想在充斥腐败和虚假的复杂世界中成为一名赤子，通过你的问题揭示真相。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；尽享天真烂漫。",
+  "backgrounds": [
+    {"name":"有志之徒","desc":"你必须证明自己的天赋与实力。当你与实力高于你的对手交战时，你不会立刻落败。你可以标记一项五行属性来缠住显然强于你的敌手，给其他人机会去执行其他行动、保护他人或取得此行所求之物。如果你这么做是为了掩护队伍撤退，那么包括你在内的全员都能安全逃走。"},
+    {"name":"行脚僧","desc":"你出身寺庙，因自身或他人的意愿入世游历红尘。只要你穿着僧衣，当地人都会对你以礼相待，连强盗对你下手亦要三思。在旅途中，你可以寻求并获得食宿招待。"},
+    {"name":"少侠","desc":"纵使身处逆境，你仍然明白何为忠诚与奉献。当你消耗 1 点缘分点来获取判定加值时，加值由 +1 提升至 +2。"}
+  ],
+  "actions": [
+    {"name":"侠骨仁心","desc":"当你试图感化反派阵营中一名有价值的效忠者，改变其立场或意图时，掷骰。当掷骰结果为 10 或以上时，你的话直抵对方内心。他们会立刻采取行动协助你，或随你而去，或去直面原主，或逃离此地。当掷骰结果为 7-9 时，你的话令对方产生了动摇。你可以自主选择是在其心中埋下怀疑的种子，或者是让其在无意间做出有利于你的举动。失败时，对方假装回心转意来愚弄你。"},
+    {"name":"天命在我","desc":"在每次团务开始时，掷不加任何五行属性修正的 2d6。当掷骰结果为 6 或以下时，标记 1 点 XP，GM 获得一个源于命运的柔和行动机会，可在之后启用。成功时，记下这个掷骰结果。在本次团务的任何时刻，你都可以将该结果与自己或盟友的掷骰结果进行替换。替换后，由你或你的盟友加上对应的五行属性调整值，照常结算判定。被替换掉的结果作废，无法产生 XP。若到本次团务结束时仍未动用，该结果自动失效。"},
+    {"name":"早有定见","desc":"你虽然经验不足，却独重明智之见。当你向另一位 PC 提供建议，对方不予采纳时，若其之后自招麻烦，你在营救对方时获得 +1 持续。"},
+    {"name":"求师问典","desc":"当你向长辈寻求指点时，无论是在当下还是通过闪回，告诉对方你面临的挑战，然后掷骰。成功时，对方会为你指明方向。当掷骰结果为 10 或以上时，对方还会透露他们与这个难题之间的隐秘关联。若你听从长辈的建议，针对该难题获得 +1 持续。如果你自行其是，则标记 1 点 XP。失败时，对方因惊变而无暇顾及你，标记一项五行属性。"},
+    {"name":"春风化雨","desc":"在有人出丑或冒犯他人后，掷骰。成功时，如果这仅仅是剧情描写，你可以将对方说出的话语修饰得更委婉些；如果这是一个失败的行动，你可以将 GM 的强硬行动弱化为柔和行动。当掷骰结果为 10 或以上时，视情况而定，你甚至能让此事被彻底揭过。失败时，你让这次冒犯变得更加严重了。"},
+    {"name":"痛定思痛","desc":"当你标记负伤槽时，所有队友获得 +1 次骰。"},
+    {"name":"乳虎窥世","desc":"这是你见识和领略大千世界的机会。每个场景一次，你可以直接询问【洞若观火】中的一项问题，无需掷骰。"},
+    {"name":"顺势而为","desc":"当你在冲突局势中使用【同舟共济】来清除一名盟友的负伤槽时，你还可以额外清除某人（包括你自己）身上的一项五行属性标记。"}
+  ]
+},
+{
+  "id": "yiduan",
+  "cn": "异端",
+  "name": "异端",
+  "intro": "选择此模板，如果你：希望扮演一位身怀左右你世界的怪异秘密，却深藏不露的角色。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；深藏你的真相。",
+  "backgrounds": [
+    {"name":"散人","desc":"你自称不擅武艺，且对此深信不疑。但不知怎地，你总能巧妙化解冲突，令对手摸不着头脑。你拥有一个风格五行属性，但并无武学风格，也没有惯用兵器，除了那些你误打误撞拾起的东西。你的本事也许源于奇运、诅咒，或失传的武学真传。当你首次与一位成名敌手【交锋】时，你获得 +1 次骰。不过，在所有战斗中，你必须手下留情。"},
+    {"name":"隐士","desc":"为了躲避敌人、逃离职责，或暗中守护某人，你假意不谙武艺。当你与成名敌手或者小卒交战，你可以隐藏身手。对方不会察觉你的功力。如果你需要付出代价来获胜，你可以选择以被识破为代价。当你失手时，对手会意识到你并非等闲之辈。你在使用【不情之请】来说服别人你只是普通人时，获得 +1 持续。如果有另一个 PC 试图戳穿你的伪装，按【君子之争】行动处理。任何时候你都能选择彻底揭露真实身份。揭露后，从另一个人物模板中选择一个原型，以新的原型替换掉隐士和本行动。"},
+    {"name":"天命","desc":"你拥有可能超出掌控的强大力量。你或许未曾受训，受到邪术影响，或在某些技艺上天赋异禀。每场团务一次，在掷骰之后，你可以额外投一个骰子，并取其中两个较高结果。若最终结果仍然是 7-9，你承受一个棘手后果。"}
+  ],
+  "actions": [
+    {"name":"破釜沉舟","desc":"你能在风格五行属性被标记后继续战斗，并以已标记的五行属性数量作为调整值进行掷骰（最多 +3）。此情况下，需要再次标记五行属性时，你必须改为标记负伤，且无法再继续战斗。"},
+    {"name":"金狮护主","desc":"你拥有一只忠诚的宠物。它经过训练，会听从你的指令。描述它的特征。每场团务一次，你的宠物可以为你挡下一次肉体伤害。它遭受伤害，并在下一场团务开始前无法行动。"},
+    {"name":"单刀赴会","desc":"当你故意独自踏入危险时，掷骰，并标记 1 点 XP。当掷骰结果为 10 或以上时，你已准备好迎接挑战，获得 +1 次骰。当掷骰结果为 7-9 时，你准备不足——敌人先于你行动。GM 说明敌人的行动方式（拉平实力差距、夺取某物、改变地点、揭露陷阱、封锁退路、嫁祸于你等）。失败时，你落入对方设下的陷阱或伏击。"},
+    {"name":"天生神力","desc":"当你尝试破坏某个可以被破坏的事物时，掷骰。成功时，你成功将其打碎。当掷骰结果为 10 或以上时，你以惊人的技艺或精准的控制将其破坏。你可以令其出现裂痕、擦着某人刻出一道痕迹、将其震成粉末、使其稍后才崩裂，或令某个庞然大物倒塌（例如一间客栈）。当掷骰结果为 7-9 时，你只是将其打碎；或标记一个五行属性，以获得掷骰结果为 10 或以上的效果。失败时，选择其一：标记一个五行属性，或你的破坏失控，局面恶化。"},
+    {"name":"暗度陈仓","desc":"某个秘密组织或门派在帮助你，你甚至未必知情。每场团务你可以进行一次闪回，说明他们曾为你做过的准备、干预或谈判。描述事情经过并掷骰。成功时，他们成功完成了此事。当掷骰结果为 7-9 时，他们成功做到，却也引来了注意，或效果不佳。失败时，他们的干预反而给你带来更多麻烦。"},
+    {"name":"寒意先觉","desc":"当你使用【洞若观火】以寻找潜在麻烦时，除了正常获得的掌控点外，你还可以额外询问以下两个问题之一：这里谁打算惹事？某人打算制造什么麻烦？当你出手干涉时，获得 +1 次骰。"},
+    {"name":"桃源旧识","desc":"你与朴实的平民百姓打交道时，获得 +1 持续。你知道如何让他们相信你是他们的一员。"},
+    {"name":"攻心为上","desc":"若你击败一位成名敌手时选择手下留情，则可以用滑稽的方式羞辱他们。你不标记 XP，而是获得与对方的 1 点缘分。此外，你还可以改变一个人或一个群体对该敌人的看法。说明这个群体是谁，以及他们现在如何看待这名敌人。"}
+  ]
+},
+{
+  "id": "zhizhe",
+  "cn": "智者",
+  "name": "智者",
+  "intro": "选择此模板，如果你：想要慎思而敏慧，并受到他人对你武艺学识的认可。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；以智慧化解问题。",
+  "backgrounds": [
+    {"name":"大师","desc":"你是沉稳睿智的典范。当你试图化解与一名 NPC 的冲突时，掷骰。当掷骰结果为 10 或以上时，你成功平息了对方的怒火。当掷骰结果为 7-9 时，你获得了一个短暂的交涉机会。你必须开出对方想要的条件，否则他们将继续发动攻势。失败时，对方的怒火将转而指向你。"},
+    {"name":"学者","desc":"你是天赋异禀的学者。当你成功基于历史、研究或线人的相关信息进行【洞若观火】判定时，额外获得 1 个掌控点。在针对此情报行动时，你将获得 +1 次骰。"},
+    {"name":"云游宗师","desc":"总有人向你发起挑战、寻求你的意见，或恳求你收其为徒。每场团务一次，只要你身处尚可通达之处，便可宣告某人突然现身，打断眼下的事件。你可以在进行【天人交战】判定前动用此能力来免除掷骰。若你这样做了，照常标记 XP，如同你已掷骰一般。"}
+  ],
+  "actions": [
+    {"name":"袖里乾坤","desc":"你能制造特殊的装置或药物，如暗器、烟雾弹、化尸水等。告知 GM 你想制作什么，由其决定所需条件（如不需要任何东西，或需要时间、材料、帮手、秘方等）。一旦备齐便可掷骰。当掷骰结果为 10 或以上时，制作成功。当掷骰结果为 7-9 时，成品的效果短暂或不稳定。失败时，成品产生与预期截然相反的效果。"},
+    {"name":"缘化悟开","desc":"当你因为【天人交战】而标记某项五行属性时，可立即与某人建立一段缘分，象征你从其有意或无意的教诲中悟出了道理。"},
+    {"name":"奉为上宾","desc":"选择一个势力，你在与其社交互动时获得 +1 次骰。该势力将视你为座上宾——直到他们发现或许并非如此。"},
+    {"name":"运筹帷幄","desc":"当你宣布一项计划时，掷骰。当掷骰结果为 10 或以上时，获得 2 点掌控点；当掷骰结果为 7-9 时：获得 1 点掌控点。执行计划期间，你可以消耗掌控点来获得 +1 次骰 、清除一项五行属性标记，或恰好随身带着某件关键物品。失败时：你仍获得 1 点掌控点，但在某个时刻局势会彻底反转，不利于你。"},
+    {"name":"博综药典","desc":"你能瞬间察觉并辨别出现在你眼前即将被服用的任何毒药或药剂。若有人中毒，你在用【迎难而上】救治他们时获得 +1 次骰。"},
+    {"name":"霎时觉醒","desc":"当你的风格属性被标记时，你可以动用另一项五行属性进行战斗行动。"},
+    {"name":"生死之诺","desc":"当你试图挽救身旁某个濒死之人时，掷骰。当掷骰结果为 10 或以上时，对方留在人世，但可能需要长时间昏迷或静养才能完全康复。当掷骰结果为 7-9 时，你可以保住对方的性命，但你必须支付极其沉重的代价。失败时，对方的死成为了你挥之不去的阴影。写下一段纠葛，描述他的离世如何影响你的余生。"},
+    {"name":"掠影惊雷","desc":"每个场景一次，你可以瞬间移动至视线范围内的任何地方。你的身形快如残影。移动不受高度或距离限制，只要路径未被完全封死即可。"}
+  ]
+},
+{
+  "id": "langzi",
+  "cn": "浪子",
+  "name": "浪子",
+  "intro": "选择此模板，如果你：若你想纵有重任在身，仍快意江湖；或是游戏人间，成为那些古板角色的反衬。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；享受每个时刻。",
+  "backgrounds": [
+    {"name":"世子","desc":"你是家族的宠儿，人人都指望你继承家业，但你未必名副其实。父母中或有一方对你百般纵容与袒护，而另一方则对你的所作所为横加指责。好在你从不缺银子；无论走到哪里，商贾与店家都会为你和你的随行者摆上最好的筵席。你可以随时赊帐，因为他们知道你家里付得起钱。"},
+    {"name":"风流客","desc":"你四处游历，寻欢作乐，斗鸡走马，留下一地风流债。你的坏名声反而为你平添了几分魅力。虽然谈不上富有，但你深谙避祸之道。当面临人情、官府或钱财方面的责难时，你可以抬出别人的名字，然后掷骰。成功时：那人代你受过。当掷骰结果为 7-9 时：那人知道栽赃者是你。失败时：你难逃此债，且你找来的替罪羊也会识破你的诡计。"},
+    {"name":"盗帅","desc":"你风度翩翩，生活优渥，暗地里却对不法之事乐此不疲。你并非寻常小贼，只是自认理应享受人间至美，并且，你只对那些脑满肠肥的权贵和贪官污吏下手。你有个名震江湖的大盗身份，此外，你还有一个对头——某位知县或捕头。虽然他一直在追捕你，但总是因为粗心大意，无意间向你走漏消息。"}
+  ],
+  "actions": [
+    {"name":"将进酒","desc":"只要你与某人互动，便能牢牢吸引其注意力。你可以引导对方前往或远离附近的某个地点。若其想要脱身，则必须标记一个五行属性，或让自己丢尽脸面。注：此行动在暴力冲突中无效。"},
+    {"name":"应有尽有","desc":"当你通过自己的渠道索取稀缺或违禁之物时，掷骰。成功时，你如愿以偿。当掷骰结果为 10 或以上时：对方手中恰好有你所需之物。当掷骰结果为 7-9 时：付出代价或碰到麻烦。从以下选项中选择其一：需要耗费时日；耗尽手头财物；引来各方瞩目；或是要为对方效力一次。失败时，你走漏了风声，消息传到了不该知道的人耳中。"},
+    {"name":"来去自如","desc":"你可以轻易挣脱束缚，并穿过紧锁的门窗，视其如无物。这同样适用于招式攻防——你身形优雅灵动，纵使在激战中，亦能衣不沾尘、杯中酒不洒分毫。"},
+    {"name":"高山流水","desc":"你掌握一门艺术（歌曲、舞蹈、书法等）。当你通过该艺术表达自己的时候，掷骰。当掷骰结果为 10 或以上时，获得 3 点掌控点。当掷骰结果为 7-9 时，获得 2 点掌控点。你可以消耗 1 点掌控点来达成以下选项中的一种：众人领会了你想要传达的心声；你引起了在场某人的兴趣和关注，告诉 GM 是谁；清除或标记在场某位 PC 身上的五行属性；你开始改变大众舆论；告诉 GM 你希望得到什么结果（需要 2 点掌控点）。\n失败时，你遭遇了一名艺术上的劲敌，或是冒犯了某位显贵。"},
+    {"name":"衣冠楚楚","desc":"你拥有极尽奢华的行头。无论你把自己弄得有多狼狈，画面一转，你总能焕然一新；或是原本那件衣服重新变得干净，或是干脆换了一套新的。此外，你获得以下 NPC 之一作为随从：总管、侍从、侍妾（臣）、幕僚。请为其命名并进行简短描述。"},
+    {"name":"瞒天过海","desc":"当你潜入某处时，掷骰。成功时，你和你的同伴可以悄无声息地潜入。当掷骰结果为 7-9 时，若要带领他人进入，你必须付出代价：标记一项五行属性（自选）、消耗 1 点缘分、引人起疑等。失败时你发现自己身陷困境。"},
+    {"name":"抽丝剥茧","desc":"当你花时间与某人往来，以摸清其关系网时，掷骰：成功时：GM（针对 NPC 时）或玩家（针对 PC 时）将向你揭示自身的一段纠葛，以及一个不愿示人的秘密。当你下次在他身上使用【不情之请】时，获得 +1 次骰。当掷骰结果为 7-9 时，目标察觉到了你在打探其底细。失败时，对方反倒知晓了你的一段纠葛。"},
+    {"name":"独具慧眼","desc":"你一眼便能辨出场中谁最富有或谁最具权势。当你在正式场合进行【洞若观火】时，无论掷骰结果如何，你都能额外获得 1 个掌控点。根据答案采取行动时，获得 +1 次骰。"}
+  ]
+},
+{
+  "id": "moke",
+  "cn": "陌客",
+  "name": "陌客",
+  "intro": "选择此模板，如果你：本想远离武林世界，却又因种种关系和承诺再度被卷入其中。",
+  "rules": "玩家守则：坚守本心；含蓄地表达内心；参与每个人的纠葛；为大局行动；离经叛道地行事。",
+  "backgrounds": [
+    {"name":"违逆者","desc":"你反抗某些势力：贪官污吏、出身门派、朝廷本身，等等。当你向其他违逆的同伴寻求帮助时，掷骰。成功时，你能秘密召集一小群人来帮助你。当掷骰结果为 7-9 时，从以下选项中选择其一：调集人手需要时间；你需要完成一件差事，才能再次求援；来援人数寥寥；你引起了不必要的注意。失败时，你的同伴在集结之前就被逮住。"},
+    {"name":"江湖骗子","desc":"你是个江湖骗子，乐天且聪敏。你深谙如何利用武林规矩与世俗律法来为自己谋利。你可以对那些本不会为你言语所动的人使用【不情之请】。失败时，他们的态度会变得强硬，此后无法再对他们使用【不情之请】。"},
+    {"name":"游方","desc":"你曾游历四方不息，帮助了许多人。每场团务一次，当你初访某个城镇或地区时，掷骰。成功时，某人对你印象深刻；获得与该 NPC 的一点缘分点。当掷骰结果为 10 或以上时，他还欠你一份恩情。失败时，你发觉某桩因你路过而留下的悲剧或背叛。"}
+  ],
+  "actions": [
+    {"name":"百晓生","desc":"你熟知武林秘事。当你初次遇见其他门派或组织的人时，你可以询问或宣告一项关于其名声或门派动向的内情。"},
+    {"name":"神兵天降","desc":"每场团务一次，你可以宣言自己在紧要关头及时赶到，或施以援手，或强行介入。事后，你可以解释自己是如何恰好到场的。"},
+    {"name":"英雄无泪","desc":"当你在【天人交战】行动中掷骰成功时，你可以选择至多两个目击者。对每一名目击者，选择其一：对他们获得 +1 次骰（PC）；【天人交战】时，获得 -1 次骰；改变他们的情绪（NPC）；花费 1 点缘分点，让他们在本场团务中私下拜访你。"},
+    {"name":"天罗地网","desc":"当你揭露一个自己此前暗中设下的陷阱时，掷骰。成功时，你的对手会触发它并露出破绽。当掷骰结果为 10 或以上时，在针对该对手时，获得 +2 次骰。失败时，陷阱失效或被识破，反而使局势更为凶险。"},
+    {"name":"千变万化","desc":"你可以进行完美的伪装。若要冒充特定人物，你必须见过对方并拥有类似的行头。当伪装可能被识破时，掷骰。成功时，你的伪装瞒过了他们。当掷骰结果为 7-9 时，他们事后方生疑心。失败时，你的伪装在最糟糕的时刻被拆穿。"},
+    {"name":"潜踪隐迹","desc":"当你利用阴影和掩体使自己几不可察时，掷骰。成功时，在你主动现身前，任何人都无法看见你或与你互动。你可以通过主动现身或发动攻击来打破此状态，当掷骰结果为 7-9 时：你仍处于隐藏状态，但留下了些许痕迹，或引起了某个敌人的警觉。失败时，你的尝试失败，且让自己陷入易受攻击的境地。"},
+    {"name":"绝处逢生","desc":"即便身陷突发状况，你仍可尝试逃离。当你强行脱身时，掷骰。成功时：你顺利逃脱，并可以带着另一人一起。当掷骰结果为 7-9 时：选择一项代价：你必须标记一项五行属性；你落入了另一个危险的境地；你留下了蛛丝马迹；你失落了某件珍贵之物。失败时，你逃脱失败，且陷入易受攻击的境地。"},
+    {"name":"四海皆兄弟","desc":"对于那些不知晓你真实所属的人，你可以伪装成任何门派的成员。在被确凿拆穿前，对方会对此深信不疑。"}
+  ]
+}
+];
+
+/* ================= 全局共享数据（各卡一致，取自 Excel） ================= */
+const ELEMENTS = [
+  {key:"tu", name:"土", cls:"tu", pos:"谨慎、专注、威仪", neg:"痴迷、轻蔑、冷漠"},
+  {key:"huo",name:"火", cls:"huo", pos:"创造、速度、激情", neg:"鲁莽、孤高、散漫"},
+  {key:"jin", name:"金", cls:"jin", pos:"掌控、算计、内省", neg:"不满、僵化、惊惧"},
+  {key:"shui",name:"水", cls:"shui", pos:"觉知、睿智、圆融", neg:"迟疑、孤立、忧郁"},
+  {key:"mu", name:"木", cls:"mu", pos:"耐心、成长、好奇", neg:"自负、愤怒、荒淫"}
+];
+const FOCUS = ["通常","浪漫"];   /* 两个纠葛大区，每区含「聚焦」标记 */
+const XP_TRIGGERS = ["在冲突中落败","在【不情之请】中接受另一名 PC 的建议","为【天人交战】掷骰","与纠葛产生重要互动","与聚焦纠葛产生重要互动"];
+const GROWTH = [
+  {dots:5, txt:"选择一项五行属性，调整值 +1"},
+  {dots:3, txt:"从此模板中获得一个行动"},
+  {dots:2, txt:"从其他模板中获得一个行动"},
+  {dots:2, txt:"获得一个自拟行动"}
+];
+
+/* ================= 状态管理 ================= */
+const KEY = "wuxia_card_";
+let cur = CARDS[0].id;
+let S = {};  // S[id] = state
+
+function defState(){
+  return {
+    inputs:{name:"",look:"",style:"",attr:"",weapon:""},
+    bg:new Array(CARDS[0].backgrounds.length).fill(false),
+    act:new Array(CARDS[0].actions.length).fill(false),
+    elem:new Array(5).fill(false),
+    adj:["0","0","0","0","0"],
+    focus:new Array(2).fill(false),
+    ent:["",""],
+    wound:false,
+    xp:0,
+    xpTrig:new Array(5).fill(0),
+    growth:new Array(4).fill(0),
+    customAct:"",
+    background:"",
+    avatar:"",
+    fate:[{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""}]
+  };
+}
+function save(){
+  try{ localStorage.setItem(KEY+cur, JSON.stringify(S[cur])); }catch(e){}
+}
+function saveTo(id){
+  try{ localStorage.setItem(KEY+id, JSON.stringify(S[id])); }catch(e){}
+}
+function normalize(d){
+  const st = defState();
+  Object.assign(st, d || {});
+  st.focus = [!!st.focus[0], !!st.focus[1]];
+  st.ent = [st.ent ? (st.ent[0]||"") : "", st.ent ? (st.ent[1]||"") : ""];
+  st.customAct = st.customAct || "";
+  st.background = st.background || "";
+  st.avatar = st.avatar || "";
+  st.xpTrig = [0,1,2,3,4].map(k=>{ const v=st.xpTrig[k]; return (typeof v==="number")?v:(v?1:0); });
+  let bgFound = false;
+  st.bg = st.bg.map(v=>{ if(v&&!bgFound){ bgFound=true; return true; } return false; });
+  if(!Array.isArray(st.fate) || st.fate.length===0) st.fate = [{name:"",val:""}];
+  if(typeof st.inputs !== "object" || st.inputs===null) st.inputs = {};
+  return st;
+}
+function load(id){
+  try{
+    const raw = localStorage.getItem(KEY+id);
+    if(!raw) return defState();
+    return normalize(JSON.parse(raw));
+  }catch(e){ return defState(); }
+}
+
+/* ================= 渲染 ================= */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function dotHtml(n, val, row){
+  let h = "";
+  for(let i=0;i<n;i++) h += '<span class="dot '+(i<val?"on":"")+'" data-i="'+i+'">'+(i<val?"●":"○")+'</span>';
+  return '<span class="'+(row!==undefined?"growth-dots":"xp-dots")+'"'+(row!==undefined?' data-grow="'+row+'"':"")+'>'+h+'</span>';
+}
+
+function renderTabs(){
+  const box = document.getElementById("tabs");
+  box.innerHTML = CARDS.map(c =>
+    '<div class="tab '+(c.id===cur?"on":"")+'" data-id="'+c.id+'">'+esc(c.name)+'</div>'
+  ).join("");
+}
+
+function renderCard(){
+  const c = CARDS.find(x=>x.id===cur);
+  const st = S[cur];
+  // 输入框字段数量对齐（学生卡等每卡相同 5 个字段）
+  while(st.inputs && Object.keys(st.inputs).length<5){}
+  const flds = [
+    ["name","姓名"],["look","外观"],["style","武学风格"],["attr","武学风格属性"],["weapon","武器"]
+  ];
+  const infoHtml = flds.map(([k,label])=>{
+    if(k==="attr"){
+      return '<div class="fld"><label>'+label+'</label><select data-k="attr">'+
+        ['','土','火','金','水','木'].map(v=>'<option value="'+v+'"'+(((st.inputs||{}).attr===v)?" selected":"")+'>'+(v||"— 选择 —")+'</option>').join("")+
+      '</select></div>';
+    }
+    return '<div class="fld"><label>'+label+'</label><input data-k="'+k+'" value="'+esc((st.inputs||{})[k]||"")+'"></div>';
+  }).join("");
+  const avatarHtml =
+    '<div class="avatar-box" id="avatarBox">'+
+      (st.avatar ? '<img src="'+st.avatar+'" alt="头像">' : '<div class="avatar-hint">上传头像<br>（点击选择图片）</div>')+
+      (st.avatar ? '<button class="avatar-remove" id="avatarRemove" title="移除头像">×</button>' : '')+
+    '</div>'+
+    '<input type="file" id="avatarFile" accept="image/*" style="display:none">';
+
+  const bgHtml = c.backgrounds.map((b,i)=>
+    '<div class="bg-item"><span class="ck" data-g="bg" data-i="'+i+'">'+(st.bg[i]?"●":"○")+'</span>'+
+    '<span class="bg-name">'+esc(b.name)+'</span><span class="bg-desc">'+esc(b.desc)+'</span></div>'
+  ).join("");
+
+  const actHtml = c.actions.map((a,i)=>
+    '<div class="act-item"><span class="ck" data-g="act" data-i="'+i+'">'+(st.act[i]?"☑":"☐")+'</span>'+
+    '<span class="act-name">'+esc(a.name)+'</span><span class="act-desc">'+esc(a.desc)+'</span></div>'
+  ).join("") +
+  '<div class="act-custom"><div class="act-custom-label">自拟行动</div>'+
+  '<textarea class="act-custom-text" data-custom placeholder="在此添加自拟行动…">'+esc(st.customAct||"")+'</textarea></div>';
+
+  const elemHtml = ELEMENTS.map((e,i)=>{
+    const styleTag = (st.inputs.attr===e.name) ? '<span class="style-tag">武学风格属性</span>' : '';
+    return '<div class="elem-row'+(st.elem[i]?" marked":"")+'"><span class="elem-name '+e.cls+'">'+e.name+'</span>'+
+    '<span class="elem-adj"><select data-g="adj" data-i="'+i+'"'+(st.elem[i]?' disabled':'')+'>'+
+      ['+2','+1','0','-1'].map(v=>'<option value="'+v+'"'+(st.adj[i]===v?" selected":"")+'>'+v+'</option>').join("")+
+    '</select></span>'+
+    '<span class="elem-dot ck" data-g="elem" data-i="'+i+'">'+(st.elem[i]?"●":"○")+'</span>'+
+    '<span class="elem-words"><span class="pos">'+e.pos+'</span><br><span class="neg">'+e.neg+'</span></span>'+
+    styleTag+
+    '</div>';
+  }).join("");
+
+  const focusHtml = FOCUS.map((f,i)=>
+    '<div class="ent-area"><div class="ent-head"><span class="ent-name">'+f+'</span>'+
+    '<span class="ent-focus">聚焦</span>'+
+    '<span class="ck" data-g="focus" data-i="'+i+'">'+(st.focus[i]?"●":"○")+'</span></div>'+
+    '<textarea class="ent-text" data-ent="'+i+'" placeholder="填写'+f+'纠葛…">'+esc(st.ent[i]||"")+'</textarea></div>'
+  ).join("");
+
+  const fateRows = st.fate.map((r,i)=>
+    '<tr><td><input data-f="name" data-i="'+i+'" value="'+esc(r.name)+'" placeholder="名称"></td>'+
+    '<td style="width:120px"><input data-f="val" data-i="'+i+'" value="'+esc(r.val)+'" placeholder="数值"></td>'+
+    '<td class="del"><button class="del-btn" data-del="'+i+'" title="删除此行">×</button></td></tr>'
+  ).join("");
+
+  const trigHtml = XP_TRIGGERS.map((t,i)=>
+    '<li class="xp-trig-item"><span class="xp-trig-txt">'+t+'</span>'+
+    '<span class="counter">'+
+      '<button class="cnt-btn" data-cnt="dec" data-i="'+i+'" title="减一次">−</button>'+
+      '<input class="cnt-input" type="number" min="0" max="99" value="'+(st.xpTrig[i]||0)+'" data-cnt="in" data-i="'+i+'">'+
+      '<button class="cnt-btn" data-cnt="inc" data-i="'+i+'" title="加一次">＋</button>'+
+    '</span></li>'
+  ).join("");
+
+  const growthHtml = GROWTH.map((g,i)=>
+    '<div class="growth-item">'+dotHtml(g.dots, st.growth[i], i)+'<span class="gtxt">'+g.txt+'</span></div>'
+  ).join("");
+
+  document.getElementById("card").innerHTML =
+  '<div class="card-head">'+
+    '<div class="badge">'+esc(c.name)+'</div>'+
+    '<div class="head-txt">'+
+      '<div class="intro">'+esc(c.intro)+'</div>'+
+      '<div class="rules">'+esc(c.rules).replace(/玩家守则：/,'<b>玩家守则：</b>')+'</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="info-area"><div class="info-grid">'+infoHtml+'</div>'+avatarHtml+'</div>'+
+  '<div class="main-grid">'+
+    '<div class="col">'+
+      '<div class="block"><div class="block-title">原型</div><div class="block-body">'+bgHtml+'</div></div>'+
+      '<div class="block"><div class="block-title">五行属性</div><div class="block-body">'+elemHtml+'</div></div>'+
+      '<div class="block"><div class="block-title">纠葛</div><div class="block-body">'+focusHtml+'</div></div>'+
+    '</div>'+
+    '<div class="col">'+
+      '<div class="block"><div class="block-title">模板行动</div><div class="block-body">'+actHtml+'</div></div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="bottom-grid">'+
+    '<div><div class="mini-title">负伤</div>'+
+      '<div class="wound-row"><span class="ck" data-g="wound">'+(st.wound?"●":"○")+'</span><span class="wound-txt">掷骰结果 <b>-2</b></span></div>'+
+    '</div>'+
+    '<div><div class="mini-title">缘分</div>'+
+      '<table class="fate-table">'+fateRows+'</table>'+
+      '<button class="add-row" id="addFate">＋ 添加一行</button>'+
+    '</div>'+
+    '<div><div class="mini-title">XP 与能力成长</div>'+
+      '<ul class="xp-trig">'+trigHtml+'</ul>'+
+      '<div class="xp-bar"><span class="xp-label">XP</span>'+dotHtml(8, st.xp)+'</div>'+
+      growthHtml+
+    '</div>'+
+  '</div>'+
+  '<div class="block bg-block">'+
+    '<div class="block-title">人物背景</div>'+
+    '<div class="block-body"><textarea class="bg-text" data-bg placeholder="在此填写人物背景…">'+esc(st.background||"")+'</textarea></div>'+
+  '</div>'+
+  '<div class="foot-note">数据自动保存在本机浏览器 · 打印时自动隐藏切换栏</div>';
+  document.querySelectorAll(".bg-text").forEach(el=>{
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  });
+}
+
+/* ================= 事件 ================= */
+function toggle(g,i){
+  const st=S[cur];
+  let v;
+  if(g==="bg"){ st.bg[i]=!st.bg[i]; for(let k=0;k<st.bg.length;k++){ if(k!==i) st.bg[k]=false; } v=st.bg[i]; }
+  else if(g==="act"){ v=st.act[i]=!st.act[i]; }
+  else if(g==="elem"){ v=st.elem[i]=!st.elem[i]; }
+  else if(g==="focus"){ v=st.focus[i]=!st.focus[i]; }
+  else if(g==="wound"){ v=st.wound=!st.wound; }
+  save();
+  return v;
+}
+function setDots(g,i,val){
+  const st=S[cur];
+  if(g==="xp") st.xp = (st.xp===val?0:val);
+  else if(g==="growth") st.growth[i] = (st.growth[i]===val?0:val);
+  save();
+}
+
+document.addEventListener("click", function(e){
+  const t = e.target;
+  // 角色切换
+  if(t.classList && t.classList.contains("tab")){
+    S[cur]=S[cur]; save();
+    cur = t.getAttribute("data-id");
+    S[cur] = S[cur] || load(cur);
+    renderTabs(); renderCard();
+    return;
+  }
+  // 勾选框（按类型显示：方框类 ☐☑，圆球类 ○●；原型/五行/负伤需整卡刷新）
+  if(t.classList && t.classList.contains("ck")){
+    const g = t.getAttribute("data-g"), i = t.getAttribute("data-i");
+    const val = toggle(g, i!==null?parseInt(i):null);
+    if(g==="wound" || g==="bg" || g==="elem"){ renderCard(); }
+    else if(g==="act" || g==="xpTrig"){ t.textContent = val ? "☑" : "☐"; }
+    else { t.textContent = val ? "●" : "○"; }
+    return;
+  }
+  // 圆点填充
+  if(t.classList && t.classList.contains("dot")){
+    const bar = t.parentElement;
+    const idx = parseInt(t.getAttribute("data-i"));
+    if(bar.classList.contains("xp-dots")){
+      setDots("xp", idx, idx+1);
+    }else{
+      const row = parseInt(bar.getAttribute("data-grow"));
+      setDots("growth", row, idx+1);
+    }
+    renderCard();
+    return;
+  }
+  // 缘分加行
+  if(t.id==="addFate"){
+    S[cur].fate.push({name:"",val:""}); save(); renderCard(); return;
+  }
+  // 缘分删行
+  if(t.classList && t.classList.contains("del-btn")){
+    const i = parseInt(t.getAttribute("data-del"));
+    S[cur].fate.splice(i,1); save(); renderCard(); return;
+  }
+  // 头像框：移除（×）优先判断，再判断点击上传（含内部区域）
+  if(t.id==="avatarRemove"){
+    S[cur].avatar = ""; save(); renderCard(); return;
+  }
+  if(t.id==="avatarBox" || (t.closest && t.closest("#avatarBox"))){
+    document.getElementById("avatarFile").click(); return;
+  }
+  // XP 触发计数加减
+  if(t.classList && t.classList.contains("cnt-btn")){
+    const i = parseInt(t.getAttribute("data-i"));
+    const op = t.getAttribute("data-cnt");
+    let v = S[cur].xpTrig[i] || 0;
+    v = (op==="inc") ? v+1 : Math.max(0, v-1);
+    S[cur].xpTrig[i] = v; save();
+    const inp = document.querySelector('.cnt-input[data-i="'+i+'"]');
+    if(inp) inp.value = v;
+    return;
+  }
+});
+
+document.addEventListener("input", function(e){
+  const t = e.target;
+  if(t.tagName==="INPUT" && t.hasAttribute("data-k")){
+    S[cur].inputs[t.getAttribute("data-k")] = t.value; save();
+  }
+  if(t.tagName==="INPUT" && t.hasAttribute("data-f")){
+    const i = parseInt(t.getAttribute("data-i"));
+    const f = t.getAttribute("data-f");
+    S[cur].fate[i][f] = t.value; save();
+  }
+  if(t.tagName==="TEXTAREA" && t.hasAttribute("data-ent")){
+    S[cur].ent[parseInt(t.getAttribute("data-ent"))] = t.value; save();
+  }
+  if(t.tagName==="TEXTAREA" && t.hasAttribute("data-custom")){
+    S[cur].customAct = t.value; save();
+  }
+  if(t.classList && t.classList.contains("cnt-input")){
+    const i = parseInt(t.getAttribute("data-i"));
+    let v = parseInt(t.value);
+    if(isNaN(v) || v<0) v=0;
+    if(v>99) v=99;
+    S[cur].xpTrig[i] = v; save();
+  }
+  if(t.classList && t.classList.contains("bg-text")){
+    S[cur].background = t.value; save();
+    t.style.height = "auto";
+    t.style.height = t.scrollHeight + "px";
+  }
+});
+document.addEventListener("change", function(e){
+  const t = e.target;
+  if(t.tagName==="SELECT" && t.getAttribute("data-g")==="adj"){
+    S[cur].adj[parseInt(t.getAttribute("data-i"))] = t.value; save();
+  }
+  if(t.tagName==="SELECT" && t.hasAttribute("data-k")){
+    S[cur].inputs[t.getAttribute("data-k")] = t.value; save(); renderCard();
+  }
+  if(t.id==="avatarFile"){
+    handleAvatar(t.files && t.files[0]);
+  }
+});
+
+function resetCard(){
+  if(!confirm("确定清空当前角色「"+CARDS.find(x=>x.id===cur).name+"」的所有填写内容？")) return;
+  S[cur] = defState(); save(); renderCard();
+}
+
+/* ================= 头像上传（含比例裁切） ================= */
+function handleAvatar(file){
+  if(!file || !file.type || file.type.indexOf("image/")!==0){ alert("请选择图片文件"); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{ openCrop(reader.result); };
+  reader.onerror = ()=>{ alert("图片读取失败，请换一张图片试试"); };
+  reader.readAsDataURL(file);
+}
+function openCrop(src){
+  const old = document.querySelector(".crop-mask");
+  if(old) old.remove();
+  try{
+    const img = new Image();
+    img.onload = ()=>{
+      try{ buildCropUI(img); }
+      catch(err){ alert("裁切界面加载失败：" + err.message); }
+    };
+    img.onerror = ()=>{ alert("图片读取失败，请换一张图片试试"); };
+    img.src = src;
+  }catch(err){ alert("打开裁切窗口失败：" + err.message); }
+}
+function buildCropUI(img){
+  const W = 200, H = 210, OUTW = 400, OUTH = 420;
+  const mask = document.createElement("div");
+  mask.className = "crop-mask";
+  mask.innerHTML =
+    '<div class="crop-box">'+
+      '<canvas class="crop-stage" id="cropCanvas" width="'+W+'" height="'+H+'"></canvas>'+
+      '<input type="range" class="crop-zoom" id="cropZoom" min="1" max="3" step="0.01" value="1">'+
+      '<div class="crop-btns"><button class="crop-ok" id="cropOk">确定</button><button class="crop-cancel" id="cropCancel">取消</button></div>'+
+    '</div>';
+  document.body.appendChild(mask);
+  const canvas = mask.querySelector("#cropCanvas");
+  const ctx = canvas.getContext("2d");
+  const fit = Math.max(W/img.width, H/img.height);  // cover
+  let zoom = 1, sx = 0, sy = 0;
+  function draw(){
+    const s = fit * zoom;
+    const sw = W / s, sh = H / s;                  // 显示框对应的源尺寸
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+  }
+  // 初始居中：sx/sy 让图片 cover 居中显示
+  function recenter(){
+    const s = fit * zoom;
+    const sw = W / s, sh = H / s;
+    sx = (img.width  - sw) / 2;
+    sy = (img.height - sh) / 2;
+  }
+  recenter(); draw();
+  // 拖拽：拖动图片 = 改变源观察点（图像向左移 = 看图片右更多部分）
+  let dragging = false, cx=0, cy=0, ox=0, oy=0;
+  function onMove(e){
+    if(!dragging) return;
+    const s = fit * zoom;
+    sx = ox + (cx - e.clientX) / s;
+    sy = oy + (cy - e.clientY) / s;
+    draw();
+  }
+  function onUp(){ dragging = false; }
+  canvas.addEventListener("mousedown", e=>{
+    e.preventDefault();
+    dragging = true; cx = e.clientX; cy = e.clientY; ox = sx; oy = sy;
+  });
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+  mask.querySelector("#cropZoom").addEventListener("input", e=>{
+    const oldS = fit * zoom;
+    zoom = parseFloat(e.target.value);
+    const newS = fit * zoom;
+    // 缩放时保持缩放中心（鼠标不动时以中心缩放）
+    sx = sx * (newS / oldS);
+    sy = sy * (newS / oldS);
+    draw();
+  });
+  mask.querySelector("#cropOk").addEventListener("click", (e)=>{
+    e.stopPropagation(); e.preventDefault();
+    try{
+      // 框里显示什么 canvas 里就是什么，直接复制
+      const out = document.createElement("canvas");
+      out.width = OUTW; out.height = OUTH;
+      out.getContext("2d").drawImage(canvas, 0, 0, W, H, 0, 0, OUTW, OUTH);
+      S[cur].avatar = out.toDataURL("image/jpeg", 0.88);
+      save();
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      mask.remove();
+      renderCard();
+    }catch(err){ alert("裁切失败：" + err.message); }
+  });
+  mask.querySelector("#cropCancel").addEventListener("click", ()=>{
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    mask.remove();
+  });
+}
+
+/* ================= 生成 JPG ================= */
+function exportJpg(){
+  const btn = document.getElementById("btnJpg");
+  const name = CARDS.find(x=>x.id===cur).name;
+  const charName = ((S[cur].inputs||{}).name||"").trim() || "未命名";
+  const done = (dataUrl)=>{
+    const a = document.createElement("a");
+    a.download = charName + "-" + name + "-人物卡.jpg";
+    a.href = dataUrl;
+    document.body.appendChild(a); a.click(); a.remove();
+    btn.textContent = "生成 JPG";
+  };
+  const card = document.querySelector(".card");
+  const opts = { pixelRatio:2, backgroundColor:"#ffffff", quality:0.92 };
+  const run = ()=>{
+    const p = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    p.then(()=>htmlToImage.toJpeg(card, opts)).then(done)
+     .catch(()=>jpgFallback(done));
+  };
+  btn.textContent = "生成中…";
+  if(window.htmlToImage){ run(); return; }
+  const s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js";
+  s.onload = run;
+  s.onerror = ()=>{ jpgFallback(done); btn.textContent = "生成 JPG"; };
+  document.head.appendChild(s);
+}
+/* 离线回退：SVG foreignObject 原生导出 */
+function jpgFallback(done){
+  try{
+    const card = document.querySelector(".card");
+    const clone = card.cloneNode(true);
+    clone.querySelectorAll("input").forEach(el=>{ el.setAttribute("value", el.value); });
+    clone.querySelectorAll("textarea").forEach(el=>{ el.textContent = el.value; });
+    const W = card.offsetWidth, H = card.offsetHeight;
+    const styleTxt = Array.from(document.querySelectorAll("style")).map(s=>s.textContent).join("");
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'"><style>'+styleTxt+
+      '</style><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml">'+
+      clone.outerHTML+'</div></foreignObject></svg>';
+    const img = new Image();
+    img.onload = ()=>{
+      const cv = document.createElement("canvas");
+      cv.width = W*2; cv.height = H*2;
+      const ctx = cv.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.drawImage(img,0,0,cv.width,cv.height);
+      done(cv.toDataURL("image/jpeg", 0.92));
+    };
+    img.onerror = ()=>{ alert("生成 JPG 失败（离线且浏览器不支持导出）"); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }catch(e){ alert("生成 JPG 失败：" + e.message); }
+}
+
+/* ================= 导入 / 导出 JSON ================= */
+function exportJson(){
+  const card = CARDS.find(x=>x.id===cur);
+  const charName = ((S[cur].inputs||{}).name||"").trim() || "未命名";
+  const data = {
+    app: "武林之心角色卡",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    id: cur,
+    name: card.name,
+    state: S[cur]
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.download = charName + "-" + card.name + "-角色数据.json";
+  a.href = URL.createObjectURL(blob);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+function importJson(){
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = ".json,application/json";
+  inp.onchange = ()=>{
+    const f = inp.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{ applyImport(JSON.parse(reader.result)); }
+      catch(e){ alert("导入失败：文件不是有效的 JSON"); }
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+function applyImport(data){
+  if(!data || typeof data !== "object"){ alert("导入失败：无法识别的数据格式"); return; }
+  let count = 0;
+  // 格式1：单角色 {id, state}
+  if(data.state){
+    const id = (data.id && CARDS.some(c=>c.id===data.id)) ? data.id
+      : (data.name && CARDS.some(c=>c.name===data.name)) ? CARDS.find(c=>c.name===data.name).id
+      : cur;
+    S[id] = normalize(data.state);
+    saveTo(id); count = 1; cur = id;
+  }else{
+    // 格式2：全量 {id: state}
+    let all = true, any = false;
+    Object.keys(data).forEach(k=>{
+      if(!CARDS.some(c=>c.id===k)) all = false;
+      else any = true;
+    });
+    if(all && any){
+      Object.keys(data).forEach(k=>{ S[k] = normalize(data[k]); saveTo(k); count++; });
+    }
+  }
+  if(count === 0){ alert("导入失败：文件中没有可识别的角色数据"); return; }
+  renderTabs(); renderCard();
+  alert("导入成功：" + count + " 个角色");
+}
+
+/* ================= 启动 ================= */
+CARDS.forEach(c=>{ S[c.id]=load(c.id); });
+S[cur]=S[cur]||defState();
+renderTabs(); renderCard();
+</script>
+</body>
+</html>
