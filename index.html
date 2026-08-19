@@ -44,12 +44,31 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg
 .head-txt .rules b{color:var(--red);}
 
 /* 基本信息 */
-.info-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px;}
-.info-grid .fld label{display:block; font-size:12px; font-weight:700; color:var(--red2); margin-bottom:3px; letter-spacing:1px;}
-.info-grid .fld input{width:100%; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--ink); background:#fff;}
+/* 基本信息：左竖排字段 + 右头像框 */
+.info-area{display:grid; grid-template-columns:1fr 200px; gap:16px; margin-bottom:14px; align-items:stretch;}
+.info-grid{display:flex; flex-direction:column; gap:9px; min-width:0; justify-content:space-between;}
+.info-grid .fld{display:flex; align-items:center; gap:10px;}
+.info-grid .fld label{flex:0 0 88px; font-size:13px; font-weight:700; color:var(--red2); letter-spacing:1px;}
+.info-grid .fld input{flex:1; min-width:0; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--ink); background:#fff;}
 .info-grid .fld input:focus{outline:none; border-color:var(--red);}
-.info-grid .fld select{width:100%; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--red); background:#fff; font-weight:600;}
+.info-grid .fld select{flex:1; min-width:0; border:1.5px solid var(--line); border-radius:4px; padding:6px 8px; font-size:14px; color:var(--red); background:#fff; font-weight:600;}
 .info-grid .fld select:focus{outline:none; border-color:var(--red);}
+.avatar-box{border:1.5px dashed var(--red2); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px; background:#FFF9F7; cursor:pointer; overflow:hidden; position:relative;}
+.avatar-box img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
+.avatar-hint{font-size:12px; color:var(--red2); text-align:center; line-height:1.8; padding:10px; pointer-events:none;}
+.avatar-remove{position:absolute; top:4px; right:4px; width:22px; height:22px; border:none; border-radius:50%; background:rgba(158,0,0,.85); color:#fff; font-size:14px; line-height:1; cursor:pointer; padding:0; z-index:2;}
+
+/* 头像裁切弹窗 */
+.crop-mask{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:999; display:flex; align-items:center; justify-content:center;}
+.crop-box{background:#fff; border-radius:10px; padding:16px 20px; display:flex; flex-direction:column; align-items:center; gap:12px;}
+.crop-stage{width:200px; height:210px; border:2px solid var(--red); border-radius:6px; overflow:hidden; position:relative; background:#EEE; cursor:move; touch-action:none;}
+.crop-stage img{position:absolute; left:0; top:0; max-width:none; pointer-events:none; user-select:none; -webkit-user-drag:none;}
+.crop-zoom{width:220px;}
+.crop-btns{display:flex; gap:12px;}
+.crop-btns button{padding:7px 22px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;}
+.crop-ok{background:var(--red); color:#fff; border:none;}
+.crop-ok:hover{background:var(--darkred);}
+.crop-cancel{background:#fff; color:var(--red2); border:1.5px solid var(--red2);}
 
 /* 主区两栏（等高，末块自适应填满，左右底部对齐） */
 .main-grid{display:grid; grid-template-columns:1.02fr 1fr; gap:18px; margin-bottom:14px; align-items:stretch;}
@@ -163,7 +182,7 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg
 
 @media (max-width:900px){
   .main-grid,.bottom-grid{grid-template-columns:1fr;}
-  .info-grid{grid-template-columns:repeat(2,1fr);}
+  .info-area{grid-template-columns:1fr;}
 }
 @media print{
   body{background:#fff; padding:0;}
@@ -364,6 +383,7 @@ function defState(){
     growth:new Array(4).fill(0),
     customAct:"",
     background:"",
+    avatar:"",
     fate:[{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""},{name:"",val:""}]
   };
 }
@@ -380,6 +400,7 @@ function normalize(d){
   st.ent = [st.ent ? (st.ent[0]||"") : "", st.ent ? (st.ent[1]||"") : ""];
   st.customAct = st.customAct || "";
   st.background = st.background || "";
+  st.avatar = st.avatar || "";
   st.xpTrig = [0,1,2,3,4].map(k=>{ const v=st.xpTrig[k]; return (typeof v==="number")?v:(v?1:0); });
   let bgFound = false;
   st.bg = st.bg.map(v=>{ if(v&&!bgFound){ bgFound=true; return true; } return false; });
@@ -426,6 +447,12 @@ function renderCard(){
     }
     return '<div class="fld"><label>'+label+'</label><input data-k="'+k+'" value="'+esc((st.inputs||{})[k]||"")+'"></div>';
   }).join("");
+  const avatarHtml =
+    '<div class="avatar-box" id="avatarBox">'+
+      (st.avatar ? '<img src="'+st.avatar+'" alt="头像">' : '<div class="avatar-hint">上传头像<br>（点击选择图片）</div>')+
+      (st.avatar ? '<button class="avatar-remove" id="avatarRemove" title="移除头像">×</button>' : '')+
+    '</div>'+
+    '<input type="file" id="avatarFile" accept="image/*" style="display:none">';
 
   const bgHtml = c.backgrounds.map((b,i)=>
     '<div class="bg-item"><span class="ck" data-g="bg" data-i="'+i+'">'+(st.bg[i]?"●":"○")+'</span>'+
@@ -485,7 +512,7 @@ function renderCard(){
       '<div class="rules">'+esc(c.rules).replace(/玩家守则：/,'<b>玩家守则：</b>')+'</div>'+
     '</div>'+
   '</div>'+
-  '<div class="info-grid">'+infoHtml+'</div>'+
+  '<div class="info-area"><div class="info-grid">'+infoHtml+'</div>'+avatarHtml+'</div>'+
   '<div class="main-grid">'+
     '<div class="col">'+
       '<div class="block"><div class="block-title">原型</div><div class="block-body">'+bgHtml+'</div></div>'+
@@ -581,6 +608,13 @@ document.addEventListener("click", function(e){
     const i = parseInt(t.getAttribute("data-del"));
     S[cur].fate.splice(i,1); save(); renderCard(); return;
   }
+  // 头像框：移除（×）优先判断，再判断点击上传（含内部区域）
+  if(t.id==="avatarRemove"){
+    S[cur].avatar = ""; save(); renderCard(); return;
+  }
+  if(t.id==="avatarBox" || (t.closest && t.closest("#avatarBox"))){
+    document.getElementById("avatarFile").click(); return;
+  }
   // XP 触发计数加减
   if(t.classList && t.classList.contains("cnt-btn")){
     const i = parseInt(t.getAttribute("data-i"));
@@ -622,6 +656,9 @@ document.addEventListener("input", function(e){
     t.style.height = "auto";
     t.style.height = t.scrollHeight + "px";
   }
+  if(t.id==="avatarFile"){
+    handleAvatar(t.files && t.files[0]);
+  }
 });
 document.addEventListener("change", function(e){
   const t = e.target;
@@ -631,11 +668,83 @@ document.addEventListener("change", function(e){
   if(t.tagName==="SELECT" && t.hasAttribute("data-k")){
     S[cur].inputs[t.getAttribute("data-k")] = t.value; save(); renderCard();
   }
+  if(t.id==="avatarFile"){
+    handleAvatar(t.files && t.files[0]);
+  }
 });
 
 function resetCard(){
   if(!confirm("确定清空当前角色「"+CARDS.find(x=>x.id===cur).name+"」的所有填写内容？")) return;
   S[cur] = defState(); save(); renderCard();
+}
+
+/* ================= 头像上传（含比例裁切） ================= */
+function handleAvatar(file){
+  if(!file || !file.type || file.type.indexOf("image/")!==0){ alert("请选择图片文件"); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{ openCrop(reader.result); };
+  reader.readAsDataURL(file);
+}
+function openCrop(src){
+  const img = new Image();
+  img.onload = ()=>{ buildCropUI(img); };
+  img.src = src;
+}
+function buildCropUI(img){
+  const W = 200, H = 210, OUTW = 400, OUTH = 420;   // 裁切框 = 头像框比例 200:210
+  const mask = document.createElement("div");
+  mask.className = "crop-mask";
+  mask.innerHTML =
+    '<div class="crop-box">'+
+      '<div class="crop-stage" id="cropStage"><img id="cropImg" alt=""></div>'+
+      '<input type="range" class="crop-zoom" id="cropZoom" min="1" max="3" step="0.01" value="1">'+
+      '<div class="crop-btns"><button class="crop-ok" id="cropOk">确定</button><button class="crop-cancel" id="cropCancel">取消</button></div>'+
+    '</div>';
+  document.body.appendChild(mask);
+  const el = mask.querySelector("#cropImg");
+  const stage = mask.querySelector("#cropStage");
+  el.src = img.src;
+  const fit = Math.max(W/img.width, H/img.height);   // cover 填充
+  let zoom = 1, tx = 0, ty = 0;
+  function apply(){
+    const s = fit*zoom;
+    el.style.width  = (img.width*s)+"px";
+    el.style.height = (img.height*s)+"px";
+    el.style.left = (W/2 - img.width*s/2 + tx)+"px";
+    el.style.top  = (H/2 - img.height*s/2 + ty)+"px";
+  }
+  apply();
+  let dragging = false, sx=0, sy=0, ox=0, oy=0;
+  stage.addEventListener("pointerdown", e=>{
+    dragging = true; sx = e.clientX; sy = e.clientY; ox = tx; oy = ty;
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  stage.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    tx = ox + (e.clientX - sx); ty = oy + (e.clientY - sy); apply();
+  });
+  stage.addEventListener("pointerup", ()=>{ dragging = false; });
+  stage.addEventListener("pointercancel", ()=>{ dragging = false; });
+  mask.querySelector("#cropZoom").addEventListener("input", e=>{
+    zoom = parseFloat(e.target.value); apply();
+  });
+  mask.querySelector("#cropOk").addEventListener("click", ()=>{
+    const s = fit*zoom;
+    const l = W/2 - img.width*s/2 + tx;
+    const t = H/2 - img.height*s/2 + ty;
+    const vx = Math.max(0, l), vy = Math.max(0, t);
+    const vw = Math.min(W, l + img.width*s) - vx;
+    const vh = Math.min(H, t + img.height*s) - vy;
+    if(vw <= 0 || vh <= 0){ alert("图片不在框内，请拖动调整位置"); return; }
+    const cv = document.createElement("canvas");
+    cv.width = OUTW; cv.height = OUTH;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, OUTW, OUTH);
+    ctx.drawImage(img, vx/s, vy/s, vw/s, vh/s, 0, 0, OUTW, OUTH);
+    S[cur].avatar = cv.toDataURL("image/jpeg", 0.88);
+    save(); renderCard(); mask.remove();
+  });
+  mask.querySelector("#cropCancel").addEventListener("click", ()=>{ mask.remove(); });
 }
 
 /* ================= 生成 JPG ================= */
